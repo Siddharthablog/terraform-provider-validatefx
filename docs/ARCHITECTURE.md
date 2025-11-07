@@ -6,6 +6,104 @@ This document provides a high-level overview of the terraform-provider-validatef
 
 The terraform-provider-validatefx is built with a layered architecture that separates validation logic from Terraform-specific function interfaces. This design promotes code reusability, testability, and maintainability.
 
+### What is a Validator?
+
+A **validator** is a reusable validation rule that checks if a value meets specific criteria. In terraform-provider-validatefx, validators:
+
+- **Encapsulate validation logic** - Each validator implements a single, well-defined validation rule (e.g., checking if a string is valid Base64 or a valid CIDR block)
+- **Are framework-agnostic** - Validators are standalone Go structs that don't depend on Terraform directly, making them testable and reusable
+- **Provide clear error messages** - When validation fails, validators return descriptive error messages that help users understand what went wrong
+- **Handle edge cases** - Validators gracefully handle null, unknown, and empty values according to Terraform semantics
+
+**Example validators include:**
+- `Base64Validator()` - Ensures a string is valid Base64 encoded data
+- `CIDRValidator()` - Validates CIDR notation (e.g., "10.0.0.0/8")
+- `BetweenValidator()` - Checks if a number falls within a range
+- `StringContainsValidator()` - Validates that a string contains a specific substring
+
+### Who Uses Validators?
+
+Validators are used by:
+
+1. **Terraform Users** - End-users leverage validators through Terraform configurations when they use the validatefx provider functions
+2. **Provider Developers** - If you're building a Terraform provider, you can use these validators to enforce consistent data validation rules
+3. **Infrastructure Teams** - Organizations use validators to enforce policy compliance and data quality standards across infrastructure-as-code
+4. **Go Developers** - Developers can import and use validators directly in their Go applications for non-Terraform validation needs
+
+### When to Use Validators?
+
+**Use validators when you need to:**
+
+1. **Validate Configuration Input** - Ensure user-provided values in Terraform configurations are correctly formatted
+   - Example: Validate that a database password meets complexity requirements
+   - Example: Ensure an IP address is in valid CIDR notation
+
+2. **Enforce Data Format Requirements** - Check that data conforms to expected formats
+   - Example: Validate email addresses, URLs, UUIDs, Base64 strings
+   - Example: Verify JSON or YAML syntax
+
+3. **Ensure Policy Compliance** - Implement organizational policies through validation
+   - Example: Require specific naming conventions for resources
+   - Example: Enforce tag presence and format
+
+4. **Prevent Configuration Drift** - Catch invalid values before they're deployed
+   - Example: Validate environment variable names
+   - Example: Check for reserved or restricted values
+
+5. **Improve User Experience** - Provide immediate, clear feedback about configuration errors
+   - Example: Show helpful error messages when values don't meet requirements
+   - Example: Guide users toward correct formats
+
+### How to Use Validators?
+
+**As a Terraform User:**
+
+You call validators as functions in Terraform configurations:
+
+```hcl
+locals {
+  # Using the base64 validation function
+  encoded_value = "U29sdmluZyB0aGU="
+  is_valid_base64 = provider::validatefx::base64(local.encoded_value)
+  
+  # Using the CIDR validation function
+  subnet = "10.0.0.0/24"
+  is_valid_cidr = provider::validatefx::cidr(local.subnet)
+}
+
+output "base64_check" {
+  value = local.is_valid_base64  # Returns true if valid, false if invalid
+}
+```
+
+**As a Go Developer:**
+
+You import and use validators directly in your code:
+
+```go
+import "github.com/The-DevOps-Daily/terraform-provider-validatefx/internal/validators"
+
+// Create a validator instance
+validator := validators.Base64Validator()
+
+// Use it in your Terraform schema (if building a provider)
+resource := &schema.Resource{
+  Schema: map[string]*schema.Schema{
+    "encoded_data": {
+      Type:     schema.TypeString,
+      Required: true,
+      Validators: []attr.Validator{
+        validators.Base64Validator(),
+      },
+    },
+  },
+}
+```
+
+**Integration with Provider:**
+
+Validators are registered with the provider and exposed as callable functions that Terraform can invoke during validation:
+
 ```
 PlusTerraform Configuration
 (uses provider.validatefx.* functions)
