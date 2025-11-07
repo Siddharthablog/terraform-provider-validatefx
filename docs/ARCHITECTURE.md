@@ -104,26 +104,23 @@ resource := &schema.Resource{
 
 Validators are registered with the provider and exposed as callable functions that Terraform can invoke during validation:
 
+```mermaid
+graph TD
+    A["🎯 Terraform Configuration"] -->|invoke provider functions| B["🔌 Provider<br/>internal/provider/provider.go"]
+    B -->|register functions| C["📦 Functions Layer<br/>internal/functions/"]
+    C -->|wrap validators| D["✓ Validators Layer<br/>internal/validators/"]
+    D -->|core logic| E["🔍 Validation Results"] 
+    C -->|expose as| F["⚡ Terraform Functions<br/>validatefx::base64()<br/>validatefx::cidr()"]
+    F -->|available in| A
+    E -->|return to| F
+    
+    style A fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style B fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style C fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style D fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    style E fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style F fill:#e0f2f1,stroke:#004d40,stroke-width:2px
 ```
-PlusTerraform Configuration
-(uses provider.validatefx.* functions)
-Arrow Down
-internal/provider/provider.go
-(registers functions via Functions())
-Arrow Down
-internal/functions/*.go
-(wraps validators as Terraform functions)
-- NewBase64Function()
-- NewCIDRFunction()
-- newStringValidationFunction() helper
-Arrow Down
-internal/validators/*.go
-(core validation logic)
-- Base64Validator()
-- CIDRValidator()
-- implements frameworkvalidator.String
-```
-
 ## Architecture Flow
 
 ### 1. Validators (internal/validators/)
