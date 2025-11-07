@@ -105,9 +105,6 @@ resource := &schema.Resource{
 Validators are registered with the provider and exposed as callable functions that Terraform can invoke during validation:
 
 ```mermaid
-
-**Animation Tip:** Want to see this diagram animated? Visit [FlowGif](https://www.flowgif.com) and paste the Mermaid code below to generate an animated step-through GIF!
-
 graph TD
     A["🎯 Terraform Configuration"] -->|invoke provider functions| B["🔌 Provider<br/>internal/provider/provider.go"]
     B -->|register functions| C["📦 Functions Layer<br/>internal/functions/"]
